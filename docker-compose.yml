@@ -1,0 +1,46 @@
+services:
+  app:
+    build: .
+    ports:
+      - "${APP_PORT:-8000}:8000"
+    env_file:
+      - path: .env
+        required: false
+    environment:
+      APP_NAME: ${APP_NAME:-llm-free-conector}
+      APP_ENV: ${APP_ENV:-local}
+      LOG_LEVEL: ${LOG_LEVEL:-INFO}
+      DATABASE_URL: ${DATABASE_URL:-postgresql+asyncpg://postgres:postgres@postgres:5432/llm_free_connector}
+      CONNECTOR_API_KEY: ${CONNECTOR_API_KEY:-}
+      NEWAPI_BASE_URL: ${NEWAPI_BASE_URL:-http://new-api:3000}
+      NEWAPI_ADMIN_TOKEN: ${NEWAPI_ADMIN_TOKEN:-}
+      NEWAPI_USER_ID: ${NEWAPI_USER_ID:-}
+      NEWAPI_CHANNEL_LIST_PATH: ${NEWAPI_CHANNEL_LIST_PATH:-/api/channel/}
+      NEWAPI_FETCH_CHANNEL_MODELS_PATH: ${NEWAPI_FETCH_CHANNEL_MODELS_PATH:-/api/channel/fetch_models/{channel_id}}
+      NEWAPI_CHANNEL_MODELS_PATH: ${NEWAPI_CHANNEL_MODELS_PATH:-/api/channel/models}
+      NEWAPI_API_KEY: ${NEWAPI_API_KEY:-}
+      SYNC_INTERVAL_SECONDS: ${SYNC_INTERVAL_SECONDS:-900}
+      SYNC_ON_STARTUP: ${SYNC_ON_STARTUP:-true}
+      ENABLE_BACKGROUND_SYNC: ${ENABLE_BACKGROUND_SYNC:-true}
+      HTTP_TIMEOUT_SECONDS: ${HTTP_TIMEOUT_SECONDS:-60}
+      RETRY_STATUS_CODES: ${RETRY_STATUS_CODES:-429,500,502,503,504}
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: llm_free_connector
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d llm_free_connector"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+volumes:
+  postgres_data:
