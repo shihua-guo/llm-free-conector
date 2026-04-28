@@ -5,7 +5,7 @@ from collections.abc import AsyncIterator
 
 from fastapi import FastAPI
 
-from app.api.routes import admin, health, models, openai
+from app.api.routes import admin, dashboard, health, models, openai
 from app.core.config import settings
 from app.db.init import init_db
 from app.db.session import SessionLocal
@@ -58,6 +58,7 @@ async def lifespan(_: FastAPI) -> AsyncIterator[None]:
 
 
 app = FastAPI(title=settings.app_name, lifespan=lifespan)
+app.include_router(dashboard.router)
 app.include_router(health.router)
 app.include_router(admin.router)
 app.include_router(models.router)

@@ -40,6 +40,14 @@ Health:
 curl http://localhost:8000/health
 ```
 
+Dashboard:
+
+```text
+http://localhost:8000/dashboard
+```
+
+The dashboard groups synced models by fixed capability and reads data from `/admin/models`. If `CONNECTOR_API_KEY` is configured, enter that key in the dashboard and save it locally in the browser.
+
 List models:
 
 ```bash
