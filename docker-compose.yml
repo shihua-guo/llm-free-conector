@@ -1,6 +1,8 @@
 services:
   app:
     build: .
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
     ports:
       - "${APP_PORT:-8000}:8000"
     env_file:
@@ -14,16 +16,21 @@ services:
       CONNECTOR_API_KEY: ${CONNECTOR_API_KEY:-}
       NEWAPI_BASE_URL: ${NEWAPI_BASE_URL:-http://new-api:3000}
       NEWAPI_ADMIN_TOKEN: ${NEWAPI_ADMIN_TOKEN:-}
+      NEWAPI_USERNAME: ${NEWAPI_USERNAME:-}
+      NEWAPI_PASSWORD: ${NEWAPI_PASSWORD:-}
+      NEWAPI_SESSION_COOKIE: ${NEWAPI_SESSION_COOKIE:-}
       NEWAPI_USER_ID: ${NEWAPI_USER_ID:-}
+      NEWAPI_LOGIN_PATH: ${NEWAPI_LOGIN_PATH:-/api/user/login}
       NEWAPI_CHANNEL_LIST_PATH: ${NEWAPI_CHANNEL_LIST_PATH:-/api/channel/}
       NEWAPI_FETCH_CHANNEL_MODELS_PATH: ${NEWAPI_FETCH_CHANNEL_MODELS_PATH:-/api/channel/fetch_models/{channel_id}}
       NEWAPI_CHANNEL_MODELS_PATH: ${NEWAPI_CHANNEL_MODELS_PATH:-/api/channel/models}
+      NEWAPI_CHANNEL_PAGE_SIZE: ${NEWAPI_CHANNEL_PAGE_SIZE:-100}
       NEWAPI_API_KEY: ${NEWAPI_API_KEY:-}
       SYNC_INTERVAL_SECONDS: ${SYNC_INTERVAL_SECONDS:-900}
       SYNC_ON_STARTUP: ${SYNC_ON_STARTUP:-true}
       ENABLE_BACKGROUND_SYNC: ${ENABLE_BACKGROUND_SYNC:-true}
       HTTP_TIMEOUT_SECONDS: ${HTTP_TIMEOUT_SECONDS:-60}
-      RETRY_STATUS_CODES: ${RETRY_STATUS_CODES:-429,500,502,503,504}
+      RETRY_STATUS_CODES: ${RETRY_STATUS_CODES:-403,429,500,502,503,504}
     depends_on:
       postgres:
         condition: service_healthy

@@ -22,6 +22,11 @@ def test_classifies_image_model() -> None:
     assert result.capability == "image"
 
 
+def test_classifies_qwen_image_model() -> None:
+    result = classify_model("qwen-image-2.0-pro")
+    assert result.capability == "image"
+
+
 def test_classifies_video_model() -> None:
     result = classify_model("sora-1")
     assert result.capability == "video"

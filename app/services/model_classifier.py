@@ -23,7 +23,7 @@ def _classify_capability(model: str) -> str:
         return "audio"
     if any(token in model for token in ("sora", "video", "veo", "kling", "wan", "hailuo", "runway")):
         return "video"
-    if any(token in model for token in ("dall-e", "gpt-image", "imagen", "flux", "midjourney", "stable-diffusion", "sdxl")):
+    if any(token in model for token in ("dall-e", "gpt-image", "image", "imagen", "flux", "midjourney", "stable-diffusion", "sdxl")):
         return "image"
     return "text"
 

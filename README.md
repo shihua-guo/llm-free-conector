@@ -9,7 +9,7 @@ OpenAI-compatible model gateway backed by NewAPI. The service periodically syncs
 - NewAPI channel and model sync.
 - Fixed aliases: `text`, `embedding`, `audio`, `image`, `video`.
 - OpenAI-compatible relay endpoints for chat, completions, embeddings, images, audio, and videos.
-- Alias failover: when a fixed alias is requested, the service tries candidate models in priority order and moves to the next candidate on retryable failures.
+- Alias failover: when a fixed alias is requested, the service tries candidate models in priority order and moves to the next candidate on retryable failures such as quota exhaustion, rate limiting, and upstream 5xx errors.
 
 ## Quick Start
 
@@ -18,7 +18,13 @@ cp .env.example .env
 docker compose up --build
 ```
 
-The app starts on `http://localhost:8000`. Configure `DATABASE_URL`, `NEWAPI_BASE_URL`, `NEWAPI_ADMIN_TOKEN`, and `NEWAPI_API_KEY` for your deployment.
+The app starts on `http://localhost:8000`. Configure `DATABASE_URL`, `NEWAPI_BASE_URL`, `NEWAPI_API_KEY`, and one NewAPI management auth method for your deployment.
+
+NewAPI management auth can use either:
+
+- `NEWAPI_ADMIN_TOKEN` plus optional `NEWAPI_USER_ID`.
+- `NEWAPI_USERNAME` and `NEWAPI_PASSWORD`; the app logs in through `NEWAPI_LOGIN_PATH`, stores the returned session cookie in memory, and uses the returned user id as `New-Api-User`.
+- `NEWAPI_SESSION_COOKIE` plus `NEWAPI_USER_ID` when you already have a valid session cookie.
 
 If PostgreSQL already exists outside this compose file, update `DATABASE_URL` and run only the app service:
 
@@ -60,6 +66,22 @@ curl http://localhost:8000/v1/chat/completions \
 | `video` | Video generation models |
 
 Direct concrete model names are passed through unchanged. Alias requests are resolved against the synced catalog.
+
+## NewAPI Docker Notes
+
+If this service runs in the same Docker network as NewAPI, point `NEWAPI_BASE_URL` at the NewAPI service name, for example:
+
+```env
+NEWAPI_BASE_URL=http://new-api:3000
+```
+
+If NewAPI is published on the host, for example `http://localhost:3001`, use:
+
+```env
+NEWAPI_BASE_URL=http://host.docker.internal:3001
+```
+
+For local non-Docker development, `http://localhost:3001` is fine.
 
 ## Priority
 
