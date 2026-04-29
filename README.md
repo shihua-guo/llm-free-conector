@@ -18,7 +18,23 @@ cp .env.example .env
 docker compose up --build
 ```
 
-The app starts on `http://localhost:8000`. Configure `DATABASE_URL`, `NEWAPI_BASE_URL`, `NEWAPI_API_KEY`, and one NewAPI management auth method for your deployment.
+The app starts on `http://localhost:${APP_PORT}`. `APP_PORT` defaults to `8000`. Configure `DATABASE_URL`, `NEWAPI_BASE_URL`, `NEWAPI_API_KEY`, and one NewAPI management auth method for your deployment.
+
+For a host-published NewAPI instance such as `http://localhost:3001`, a typical `.env` looks like this:
+
+```env
+APP_PORT=18000
+DATABASE_URL=postgresql+asyncpg://postgres:postgres@postgres:5432/llm_free_connector
+NEWAPI_BASE_URL=http://host.docker.internal:3001
+NEWAPI_USERNAME=root
+NEWAPI_PASSWORD=replace-with-your-newapi-password
+NEWAPI_API_KEY=replace-with-your-newapi-api-key
+
+# Optional. Set this only when you want callers to authenticate to this gateway.
+CONNECTOR_API_KEY=replace-with-your-gateway-key
+```
+
+Do not commit `.env`. It is ignored by Git.
 
 NewAPI management auth can use either:
 
@@ -32,18 +48,54 @@ If PostgreSQL already exists outside this compose file, update `DATABASE_URL` an
 docker compose up --build --no-deps app
 ```
 
+## Usage
+
+Callers should use this gateway, not NewAPI directly.
+
+| Purpose | URL |
+| --- | --- |
+| OpenAI-compatible Base URL | `http://<server-ip>:<APP_PORT>/v1` |
+| Current LAN example | `http://192.168.2.200:18000/v1` |
+| Health check | `http://<server-ip>:<APP_PORT>/health` |
+| Dashboard | `http://<server-ip>:<APP_PORT>/dashboard` |
+
+API key rules:
+
+- `CONNECTOR_API_KEY` is the key for callers of this gateway.
+- If `CONNECTOR_API_KEY` is empty, the gateway does not require `Authorization`.
+- `NEWAPI_API_KEY` is used internally by the gateway when forwarding to NewAPI. Do not give it to callers.
+- If an SDK requires an API key while `CONNECTOR_API_KEY` is empty, pass any placeholder value such as `dummy`.
+
+Model names for callers:
+
+| Model | Routes to |
+| --- | --- |
+| `text` | Best available text/chat model |
+| `embedding` | Best available embedding model |
+| `audio` | Best available audio model |
+| `image` | Best available image model |
+| `video` | Best available video model |
+
+Example OpenAI SDK configuration:
+
+```text
+base_url = "http://192.168.2.200:18000/v1"
+api_key = "${CONNECTOR_API_KEY}"
+model = "text"
+```
+
 ## API
 
 Health:
 
 ```bash
-curl http://localhost:8000/health
+curl http://localhost:${APP_PORT:-8000}/health
 ```
 
 Dashboard:
 
 ```text
-http://localhost:8000/dashboard
+http://localhost:${APP_PORT:-8000}/dashboard
 ```
 
 The dashboard groups synced models by fixed capability and reads data from `/admin/models`. If `CONNECTOR_API_KEY` is configured, enter that key in the dashboard and save it locally in the browser.
@@ -51,13 +103,14 @@ The dashboard groups synced models by fixed capability and reads data from `/adm
 List models:
 
 ```bash
-curl http://localhost:8000/v1/models
+curl http://localhost:${APP_PORT:-8000}/v1/models \
+  -H "Authorization: Bearer ${CONNECTOR_API_KEY}"
 ```
 
 Use a fixed alias through an OpenAI-compatible endpoint:
 
 ```bash
-curl http://localhost:8000/v1/chat/completions \
+curl http://localhost:${APP_PORT:-8000}/v1/chat/completions \
   -H "Authorization: Bearer ${CONNECTOR_API_KEY}" \
   -H "Content-Type: application/json" \
   -d '{"model":"text","messages":[{"role":"user","content":"hello"}]}'
